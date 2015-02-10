@@ -158,7 +158,7 @@ def save(filepath,
 
     # gather the file content
     data, content = _handle_children(data, figure)
-    import IPython; IPython.embed()
+
     disclaimer = (
         'This file was created by matplotlib v%s.\n'
         '%s\n'
@@ -188,11 +188,8 @@ def save(filepath,
     newcontent = []
     for c in content:
         if (u'\u2212' in c):
-            print "damn you!"
-            print c
             c =  c.replace(u'\u2212', '-')
-            if (u'\u2212' in c):
-                print "WTF!!!"
+        if 'legend' in c:
             print c
         newcontent.append(c)
     content = newcontent
@@ -457,7 +454,9 @@ def _draw_axes(data, obj):
     # opportunity to contribute to data['extra axis options'].
     data, children_content = _handle_children(data, obj)
 
-    if data['extra axis options']:
+    if data['extra axis options'] and (obj.legend() is not None):
+        import IPython; IPython.embed()
+        print data['extra axis options']
         axis_options.extend(data['extra axis options'])
 
     if axis_options:
@@ -1338,11 +1337,10 @@ def _draw_legend(data, obj):
     cont = 'legend entries={{%s}}' % '},{'.join(texts)
     data['extra axis options'].add(cont)
 
-#    # extract column information from python
-#    if hasattr(obj, 'columnspace'):
-#        cont = 'legend colums=%i,' % obj.columnspace
-#        data['extra axis options'].add(cont)
-
+    # extract column information from python
+    if hasattr(obj, 'columnspacing'):
+        cont = 'legend columns=%i' % obj.columnspacing
+        data['extra axis options'].add(cont)
 
     # Get the location.
     # http://matplotlib.org/api/legend_api.html
