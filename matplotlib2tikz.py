@@ -25,6 +25,7 @@ import matplotlib as mpl
 import numpy as np
 import os
 import warnings
+import re
 
 # meta info
 __author__ = 'Nico Schlömer'
@@ -154,9 +155,10 @@ def save(filepath,
     if show_info:
         print('file encoding: {0}'.format(file_handle.encoding))
 
+
     # gather the file content
     data, content = _handle_children(data, figure)
-
+    import IPython; IPython.embed()
     disclaimer = (
         'This file was created by matplotlib v%s.\n'
         '%s\n'
@@ -182,7 +184,20 @@ def save(filepath,
         file_handle.write('\n'.join(coldefs))
         file_handle.write('\n\n')
 
-    file_handle.write(''.join(content))
+    # SVDK ################
+    newcontent = []
+    for c in content:
+        if (u'\u2212' in c):
+            print "damn you!"
+            print c
+            c =  c.replace(u'\u2212', '-')
+            if (u'\u2212' in c):
+                print "WTF!!!"
+            print c
+        newcontent.append(c)
+    content = newcontent
+
+    file_handle.write(''.join((content)))
     if wrap:
         file_handle.write('\\end{tikzpicture}')
 
@@ -1311,12 +1326,23 @@ def _mpl_color2xcolor(data, matplotlib_color):
 def _draw_legend(data, obj):
     '''Adds legend code to the EXTRA_AXIS_OPTIONS.
     '''
+
+#    # prevent writing the legend if it is not shown in python
+#    if not obj.get_visible():
+#        return data
+
     texts = []
     for text in obj.texts:
         texts.append('%s' % text.get_text())
 
     cont = 'legend entries={{%s}}' % '},{'.join(texts)
     data['extra axis options'].add(cont)
+
+#    # extract column information from python
+#    if hasattr(obj, 'columnspace'):
+#        cont = 'legend colums=%i,' % obj.columnspace
+#        data['extra axis options'].add(cont)
+
 
     # Get the location.
     # http://matplotlib.org/api/legend_api.html
